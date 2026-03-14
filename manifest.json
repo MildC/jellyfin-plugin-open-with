@@ -1,0 +1,24 @@
+{
+  "name": "MildC's Plugin Repository",
+  "repositoryUrl": "https://github.com/MildC/jellyfin-plugin-open-with",
+  "plugins": [
+    {
+      "category": "General",
+      "guid": "a7d3a7e9-4b3c-4f1e-9d7a-6c5b4a3d2e1f",
+      "name": "Open with player",
+      "description": "Open media with external players via deep links (IINA, VLC, etc.)",
+      "owner": "MildC",
+      "overview": "Adds context menu options to open videos in external players using deep links. Supports multiple players with configurable URL templates.",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "changelog": "Initial release with IINA default, multiple player support, and admin configuration UI",
+          "targetAbi": "10.11.0.0",
+          "sourceUrl": "https://github.com/MildC/jellyfin-plugin-open-with/releases/download/v1.0.0/jellyfin-plugin-open-with-1.0.0.zip",
+          "checksum": "25a2168a4c7c11b057687f7af25c0f13",
+          "timestamp": "2026-03-14T17:20:00Z"
+        }
+      ]
+    }
+  ]
+}
