@@ -8,6 +8,14 @@
     "overview": "Adds context menu options to open videos in external players using deep links. Supports multiple players with configurable URL templates.",
     "versions": [
       {
+        "version": "1.0.5",
+        "changelog": "Fix: Inject JavaScript directly into index.html for reliable loading",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/MildC/jellyfin-plugin-open-with/releases/download/v1.0.5/jellyfin-plugin-open-with-1.0.5.zip",
+        "checksum": "ebdcd1f2d5f55529f85c741cbc5fd8c4",
+        "timestamp": "2026-03-14T18:45:00Z"
+      },
+      {
         "version": "1.0.4",
         "changelog": "Fix: Register JavaScript file as embedded resource so it loads in web client",
         "targetAbi": "10.11.0.0",
