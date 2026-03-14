@@ -116,16 +116,16 @@
                         const displayName = player.Name || player.Prefix.replace('://', '');
                         const templateDisplay = player.UrlTemplate ? escapeHtml(player.UrlTemplate) : '<em>Default</em>';
                         const enabledDisplay = player.Enabled ? '✓' : '✗';
-                        html += `<tr>
-                            <td>${escapeHtml(displayName)}</td>
-                            <td>${escapeHtml(player.Prefix)}</td>
-                            <td>${templateDisplay}</td>
-                            <td>${enabledDisplay}</td>
-                            <td>
-                                <button is="emby-button" type="button" class="raised button-edit" data-index="${index}">Edit</button>
-                                <button is="emby-button" type="button" class="raised button-delete" data-index="${index}">Delete</button>
-                            </td>
-                        </tr>`;
+                        html += '<tr>' +
+                            '<td>' + escapeHtml(displayName) + '</td>' +
+                            '<td>' + escapeHtml(player.Prefix) + '</td>' +
+                            '<td>' + templateDisplay + '</td>' +
+                            '<td>' + enabledDisplay + '</td>' +
+                            '<td>' +
+                                '<button is="emby-button" type="button" class="raised button-edit" data-index="' + index + '">Edit</button>' +
+                                '<button is="emby-button" type="button" class="raised button-delete" data-index="' + index + '">Delete</button>' +
+                            '</td>' +
+                        '</tr>';
                     });
 
                     html += '</tbody></table>';
