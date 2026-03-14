@@ -36,7 +36,7 @@ The plugin consists of two main components:
 - Stores configuration in XML file
 
 **2. Client-Side JavaScript Module**
-- Injected into Jellyfin web client by the plugin
+- Injected into Jellyfin web client via plugin web resources (standard Jellyfin plugin pattern - files in `Web/` directory are automatically served)
 - Uses MutationObserver to detect context menu appearance
 - Adds menu items for configured players
 - Constructs deep link URLs and triggers them
@@ -219,6 +219,42 @@ This ensures:
 - Direct streaming (no transcoding)
 - Original file quality
 - Authentication via API token
+
+## Admin Configuration UI
+
+### Configuration Page (configPage.html)
+
+The admin UI provides a form for managing players:
+
+**Layout:**
+- Header: "Open with player - Configuration"
+- Player list table showing: Name, Prefix, URL Template (or "Default"), Enabled status, Actions (Edit/Delete)
+- "Add Player" button at bottom
+
+**Add/Edit Player Flow:**
+1. Click "Add Player" or "Edit" on existing player
+2. Modal/form appears with fields:
+   - **Display Name** (optional text input) - "Leave empty to use prefix name"
+   - **Deep Link Prefix** (required text input) - Must end with "://"
+   - **URL Template** (optional textarea) - "Leave empty to use default pattern"
+   - **Enabled** (checkbox) - Default: checked
+3. Save validates:
+   - Prefix is not empty and ends with "://"
+   - Prefix doesn't conflict with existing player
+   - URL template (if provided) contains valid variables
+4. On save: updates configuration, shows success message, refreshes list
+
+**Delete Player Flow:**
+1. Click "Delete" button
+2. Confirmation dialog: "Remove [PlayerName]?"
+3. On confirm: removes from configuration, refreshes list
+
+**Validation Rules:**
+- Prefix required, must end with "://"
+- Name max length: 50 characters
+- URL template variables allowed: `{prefix}`, `{streamUrl}`, `{itemId}`, `{itemName}`
+- URL template must contain `{streamUrl}` if provided
+- Sanitize all inputs to prevent XSS
 
 ## Error Handling
 
