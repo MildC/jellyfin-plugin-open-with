@@ -106,7 +106,18 @@
             return null;
         }
 
-        return `${serverUrl}/Videos/${itemId}/stream?Static=true&mediaSourceId=${itemId}&api_key=${accessToken}`;
+        // Validate itemId is alphanumeric/UUID format
+        if (!/^[a-zA-Z0-9-]+$/.test(itemId)) {
+            log(`Invalid item ID format: ${itemId}`, 'error');
+            return null;
+        }
+
+        const url = new URL(`/Videos/${itemId}/stream`, serverUrl);
+        url.searchParams.set('Static', 'true');
+        url.searchParams.set('mediaSourceId', itemId);
+        url.searchParams.set('api_key', accessToken);
+
+        return url.toString();
     }
 
     /**
@@ -135,7 +146,7 @@
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        log(`Triggered deep link: ${url.substring(0, 50)}...`);
+        log(`Triggered deep link: ${url.split('?')[0]}...`); // Only log path, not query params with token
     }
 
     /**
@@ -175,14 +186,23 @@
         button.setAttribute('type', 'button');
         button.style.cssText = 'display: flex; align-items: center; padding: 0.5em 1em;';
 
-        button.innerHTML = `
-            <span class="listItemIcon material-icons" style="margin-right: 1em;">${iconName}</span>
-            <div class="listItemBody">
-                <div class="listItemBodyText">${text}</div>
-            </div>
-        `;
+        const icon = document.createElement('span');
+        icon.className = 'listItemIcon material-icons';
+        icon.style.marginRight = '1em';
+        icon.textContent = iconName;
 
+        const bodyDiv = document.createElement('div');
+        bodyDiv.className = 'listItemBody';
+
+        const textDiv = document.createElement('div');
+        textDiv.className = 'listItemBodyText';
+        textDiv.textContent = text; // Safe: uses textContent instead of innerHTML
+
+        bodyDiv.appendChild(textDiv);
+        button.appendChild(icon);
+        button.appendChild(bodyDiv);
         button.onclick = onClick;
+
         return button;
     }
 
@@ -322,9 +342,11 @@
         // Load configuration
         await loadPlayerConfig();
 
-        // Set up MutationObserver
+        // Set up MutationObserver with debouncing
+        let debounceTimer;
         const observer = new MutationObserver(() => {
-            processContextMenus();
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(processContextMenus, 100);
         });
 
         observer.observe(document.body, {
