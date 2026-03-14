@@ -12,6 +12,25 @@ Open video media with external players via deep links (IINA, VLC, MPV, etc.).
 
 ## Installation
 
+### Method 1: Install via Jellyfin Catalog (Recommended)
+
+1. Open Jellyfin admin dashboard
+2. Go to **Dashboard → Plugins → Repositories**
+3. Click **"+"** to add a new repository
+4. Enter:
+   - **Repository Name:** MildC's Plugins
+   - **Repository URL:**
+     ```
+     https://raw.githubusercontent.com/MildC/jellyfin-plugin-open-with/main/manifest.json
+     ```
+5. Click **Save**
+6. Go to **Dashboard → Plugins → Catalog**
+7. Find **"Open with player"** and click **Install**
+8. **Restart** Jellyfin when prompted
+9. Navigate to **Dashboard → Plugins → Open with player** to configure
+
+### Method 2: Manual Installation
+
 1. Download the latest release from [Releases](https://github.com/MildC/jellyfin-plugin-open-with/releases)
 2. Extract the zip file to your Jellyfin plugin directory:
    - Linux: `/var/lib/jellyfin/plugins/Jellyfin.Plugin.OpenWith/`
@@ -73,7 +92,7 @@ Default template: `{prefix}weblink?url={streamUrl}`
 
 ## Requirements
 
-- Jellyfin 10.8.0 or later
+- Jellyfin 10.11.0 or later
 - External player application installed locally
 
 ## Development
