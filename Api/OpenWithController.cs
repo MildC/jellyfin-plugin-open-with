@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Jellyfin.Plugin.OpenWith.Configuration;
-using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,6 +17,7 @@ namespace Jellyfin.Plugin.OpenWith.Api
         /// </summary>
         /// <returns>List of player configurations.</returns>
         [HttpGet("Config")]
+        [AllowAnonymous]
         [ProducesResponseType(typeof(List<PlayerConfig>), 200)]
         public ActionResult<List<PlayerConfig>> GetConfig()
         {
