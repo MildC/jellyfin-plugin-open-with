@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>Jellyfin.Plugin.OpenWith</id>
+    <version>1.0.0</version>
+    <title>Open with player</title>
+    <authors>MildC</authors>
+    <owners>MildC</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Open media with external players via deep links (IINA, VLC, etc.)</description>
+    <projectUrl>https://github.com/MildC/jellyfin-plugin-open-with</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/jellyfin/jellyfin-ux/master/branding/SVG/icon-transparent.svg</iconUrl>
+    <tags>jellyfin plugin player external iina vlc deeplink</tags>
+    <category>General</category>
+    <releaseNotes>Initial release</releaseNotes>
+  </metadata>
+</package>
