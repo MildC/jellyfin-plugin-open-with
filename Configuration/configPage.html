@@ -88,6 +88,9 @@
                             config.Players = [];
                         }
                         renderPlayerList();
+                    }).catch(function(error) {
+                        console.error('[OpenWith] Failed to load configuration:', error);
+                        Dashboard.alert('Failed to load configuration. Please refresh the page.');
                     });
                 }
 
@@ -104,7 +107,7 @@
 
                     config.Players.forEach(function(player, index) {
                         const displayName = player.Name || player.Prefix.replace('://', '');
-                        const templateDisplay = player.UrlTemplate || '<em>Default</em>';
+                        const templateDisplay = player.UrlTemplate ? escapeHtml(player.UrlTemplate) : '<em>Default</em>';
                         const enabledDisplay = player.Enabled ? '✓' : '✗';
                         html += `<tr>
                             <td>${escapeHtml(displayName)}</td>
@@ -221,7 +224,7 @@
                     const player = {
                         Id: document.getElementById('playerId').value || generateId(),
                         Prefix: prefix,
-                        Name: name,
+                        Name: name || null,
                         UrlTemplate: urlTemplate || null,
                         Enabled: enabled
                     };
