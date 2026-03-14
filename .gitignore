@@ -6,3 +6,4 @@ obj/
 .vscode/
 *.DotSettings.user
 .claude/
+*.zip
