@@ -1,10 +1,264 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Open with Player Configuration</title>
+    <title>Open with player - Configuration</title>
 </head>
 <body>
-    <div id="openWithConfigPage"></div>
+    <div data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-checkbox,emby-select">
+        <div data-role="content">
+            <div class="content-primary">
+                <h1>Open with player - Configuration</h1>
+                <p>Configure external players for opening media via deep links.</p>
+
+                <div class="verticalSection">
+                    <h2>Configured Players</h2>
+                    <div id="playerList"></div>
+                    <button is="emby-button" type="button" class="raised button-submit block" id="addPlayerBtn">
+                        <span>Add Player</span>
+                    </button>
+                </div>
+
+                <!-- Player Edit Modal -->
+                <div id="playerModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+                    <div style="background-color: var(--theme-background-color); margin: 10% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 4px;">
+                        <h2 id="modalTitle">Add Player</h2>
+                        <form id="playerForm">
+                            <input type="hidden" id="playerId">
+                            <input type="hidden" id="playerIndex">
+
+                            <div class="inputContainer">
+                                <label for="playerName">Display Name (optional):</label>
+                                <input is="emby-input" type="text" id="playerName" placeholder="Leave empty to use prefix name" maxlength="50">
+                                <div class="fieldDescription">The name shown in the context menu.</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label for="playerPrefix">Deep Link Prefix (required):</label>
+                                <input is="emby-input" type="text" id="playerPrefix" placeholder="iina://" required>
+                                <div class="fieldDescription">Must end with "://" (e.g., iina://, vlc://, mpv://)</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label for="playerUrlTemplate">URL Template (optional):</label>
+                                <textarea is="emby-textarea" id="playerUrlTemplate" rows="3" placeholder="Leave empty for default pattern"></textarea>
+                                <div class="fieldDescription">
+                                    Variables: {prefix}, {streamUrl}, {itemId}, {itemName}<br>
+                                    Default: {prefix}weblink?url={streamUrl}
+                                </div>
+                            </div>
+
+                            <div class="checkboxContainer">
+                                <label>
+                                    <input is="emby-checkbox" type="checkbox" id="playerEnabled" checked>
+                                    <span>Enabled</span>
+                                </label>
+                            </div>
+
+                            <div class="formDialogFooter">
+                                <button is="emby-button" type="submit" class="raised button-submit block">
+                                    <span>Save</span>
+                                </button>
+                                <button is="emby-button" type="button" class="raised button-cancel" id="cancelBtn">
+                                    <span>Cancel</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="verticalSection">
+                    <button is="emby-button" type="button" class="raised button-submit block" id="saveBtn">
+                        <span>Save Configuration</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            (function() {
+                const pluginId = 'a7d3a7e9-4b3c-4f1e-9d7a-6c5b4a3d2e1f';
+                let config = null;
+
+                // Load configuration
+                function loadConfig() {
+                    return ApiClient.getPluginConfiguration(pluginId).then(function(cfg) {
+                        config = cfg;
+                        if (!config.Players) {
+                            config.Players = [];
+                        }
+                        renderPlayerList();
+                    });
+                }
+
+                // Render player list
+                function renderPlayerList() {
+                    const container = document.getElementById('playerList');
+                    if (!config.Players || config.Players.length === 0) {
+                        container.innerHTML = '<p><em>No players configured yet.</em></p>';
+                        return;
+                    }
+
+                    let html = '<table class="tblPlayers" style="width: 100%; border-collapse: collapse;">';
+                    html += '<thead><tr><th>Name</th><th>Prefix</th><th>URL Template</th><th>Enabled</th><th>Actions</th></tr></thead><tbody>';
+
+                    config.Players.forEach(function(player, index) {
+                        const displayName = player.Name || player.Prefix.replace('://', '');
+                        const templateDisplay = player.UrlTemplate || '<em>Default</em>';
+                        const enabledDisplay = player.Enabled ? '✓' : '✗';
+                        html += `<tr>
+                            <td>${escapeHtml(displayName)}</td>
+                            <td>${escapeHtml(player.Prefix)}</td>
+                            <td>${templateDisplay}</td>
+                            <td>${enabledDisplay}</td>
+                            <td>
+                                <button is="emby-button" type="button" class="raised button-edit" data-index="${index}">Edit</button>
+                                <button is="emby-button" type="button" class="raised button-delete" data-index="${index}">Delete</button>
+                            </td>
+                        </tr>`;
+                    });
+
+                    html += '</tbody></table>';
+                    container.innerHTML = html;
+
+                    // Attach event listeners
+                    container.querySelectorAll('.button-edit').forEach(function(btn) {
+                        btn.addEventListener('click', function() {
+                            editPlayer(parseInt(this.getAttribute('data-index')));
+                        });
+                    });
+
+                    container.querySelectorAll('.button-delete').forEach(function(btn) {
+                        btn.addEventListener('click', function() {
+                            deletePlayer(parseInt(this.getAttribute('data-index')));
+                        });
+                    });
+                }
+
+                // Escape HTML to prevent XSS
+                function escapeHtml(text) {
+                    const div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
+                }
+
+                // Add player
+                document.getElementById('addPlayerBtn').addEventListener('click', function() {
+                    openPlayerModal();
+                });
+
+                // Edit player
+                function editPlayer(index) {
+                    const player = config.Players[index];
+                    openPlayerModal(player, index);
+                }
+
+                // Delete player
+                function deletePlayer(index) {
+                    if (!confirm('Remove this player?')) {
+                        return;
+                    }
+                    config.Players.splice(index, 1);
+                    renderPlayerList();
+                }
+
+                // Open modal
+                function openPlayerModal(player, index) {
+                    const modal = document.getElementById('playerModal');
+                    const form = document.getElementById('playerForm');
+                    const title = document.getElementById('modalTitle');
+
+                    title.textContent = player ? 'Edit Player' : 'Add Player';
+
+                    if (player) {
+                        document.getElementById('playerId').value = player.Id || '';
+                        document.getElementById('playerIndex').value = index;
+                        document.getElementById('playerName').value = player.Name || '';
+                        document.getElementById('playerPrefix').value = player.Prefix || '';
+                        document.getElementById('playerUrlTemplate').value = player.UrlTemplate || '';
+                        document.getElementById('playerEnabled').checked = player.Enabled !== false;
+                    } else {
+                        form.reset();
+                        document.getElementById('playerId').value = '';
+                        document.getElementById('playerIndex').value = '';
+                        document.getElementById('playerEnabled').checked = true;
+                    }
+
+                    modal.style.display = 'block';
+                }
+
+                // Close modal
+                function closePlayerModal() {
+                    document.getElementById('playerModal').style.display = 'none';
+                }
+
+                document.getElementById('cancelBtn').addEventListener('click', closePlayerModal);
+
+                // Save player
+                document.getElementById('playerForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    const prefix = document.getElementById('playerPrefix').value.trim();
+                    const name = document.getElementById('playerName').value.trim();
+                    const urlTemplate = document.getElementById('playerUrlTemplate').value.trim();
+                    const enabled = document.getElementById('playerEnabled').checked;
+                    const index = document.getElementById('playerIndex').value;
+
+                    // Validation
+                    if (!prefix) {
+                        alert('Prefix is required.');
+                        return;
+                    }
+                    if (!prefix.endsWith('://')) {
+                        alert('Prefix must end with "://"');
+                        return;
+                    }
+                    if (urlTemplate && !urlTemplate.includes('{streamUrl}')) {
+                        alert('URL template must contain {streamUrl} variable.');
+                        return;
+                    }
+
+                    const player = {
+                        Id: document.getElementById('playerId').value || generateId(),
+                        Prefix: prefix,
+                        Name: name,
+                        UrlTemplate: urlTemplate || null,
+                        Enabled: enabled
+                    };
+
+                    if (index !== '') {
+                        // Edit existing
+                        config.Players[parseInt(index)] = player;
+                    } else {
+                        // Add new
+                        config.Players.push(player);
+                    }
+
+                    renderPlayerList();
+                    closePlayerModal();
+                });
+
+                // Generate simple ID
+                function generateId() {
+                    return 'player-' + Date.now();
+                }
+
+                // Save configuration
+                document.getElementById('saveBtn').addEventListener('click', function() {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.updatePluginConfiguration(pluginId, config).then(function() {
+                        Dashboard.hideLoadingMsg();
+                        Dashboard.alert('Configuration saved successfully.');
+                    }).catch(function(error) {
+                        Dashboard.hideLoadingMsg();
+                        Dashboard.alert('Error saving configuration: ' + error);
+                    });
+                });
+
+                // Initialize
+                loadConfig();
+            })();
+        </script>
+    </div>
 </body>
 </html>
