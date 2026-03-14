@@ -5,6 +5,8 @@
     <AssemblyName>Jellyfin.Plugin.OpenWith</AssemblyName>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>NU1903</NoWarn>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
