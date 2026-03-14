@@ -16,4 +16,8 @@
   <ItemGroup>
     <EmbeddedResource Include="Configuration/configPage.html" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Web/**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
