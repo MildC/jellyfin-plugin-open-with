@@ -2,7 +2,7 @@ export VERSION := 1.0.6
 export GITHUB_REPO := MildC/jellyfin-plugin-open-with
 export FILE := jellyfin-plugin-open-with-$(VERSION).zip
 
-.PHONY: build clean zip release update-version update-manifest push-manifest create-tag create-gh-release
+.PHONY: build clean zip release update-version update-manifest commit-version push create-tag create-gh-release
 
 build:
 	dotnet clean
@@ -20,7 +20,6 @@ checksum:
 
 create-tag:
 	git tag v$(VERSION)
-	git push origin v$(VERSION)
 
 create-gh-release:
 	gh release create v$(VERSION) "$(FILE)" \
@@ -33,13 +32,18 @@ update-version:
 update-manifest:
 	node scripts/update-manifest.js
 
-push-manifest:
+# Commit version changes
+commit-version:
 	git add manifest.json Jellyfin.Plugin.OpenWith.csproj
 	git commit -m "chore: bump version to $(VERSION)"
+
+# Push commits and tags
+push:
 	git push origin main
+	git push origin v$(VERSION)
 
 # Full release workflow
-release: update-version build zip create-tag create-gh-release update-manifest push-manifest
+release: update-version build zip update-manifest commit-version create-tag push create-gh-release
 	@echo "Release $(VERSION) completed successfully!"
 	@echo "Don't forget to delete the old plugin directory on your server"
 
