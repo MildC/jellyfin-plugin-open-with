@@ -80,6 +80,13 @@
                 const pluginId = 'a7d3a7e9-4b3c-4f1e-9d7a-6c5b4a3d2e1f';
                 let config = null;
 
+                // Escape HTML to prevent XSS
+                function escapeHtml(text) {
+                    const div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
+                }
+
                 // Load configuration
                 function loadConfig() {
                     return ApiClient.getPluginConfiguration(pluginId).then(function(cfg) {
@@ -136,13 +143,6 @@
                             deletePlayer(parseInt(this.getAttribute('data-index')));
                         });
                     });
-                }
-
-                // Escape HTML to prevent XSS
-                function escapeHtml(text) {
-                    const div = document.createElement('div');
-                    div.textContent = text;
-                    return div.innerHTML;
                 }
 
                 // Add player
