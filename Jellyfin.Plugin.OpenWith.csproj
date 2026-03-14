@@ -3,8 +3,8 @@
     <TargetFramework>net9.0</TargetFramework>
     <RootNamespace>Jellyfin.Plugin.OpenWith</RootNamespace>
     <AssemblyName>Jellyfin.Plugin.OpenWith</AssemblyName>
-    <AssemblyVersion>1.0.3</AssemblyVersion>
-    <FileVersion>1.0.3</FileVersion>
+    <AssemblyVersion>1.0.4</AssemblyVersion>
+    <FileVersion>1.0.4</FileVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Nullable>enable</Nullable>
@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Configuration/configPage.html" />
+    <EmbeddedResource Include="Web/js/openWithMenu.js" />
   </ItemGroup>
 
   <ItemGroup>

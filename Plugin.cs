@@ -44,6 +44,12 @@ namespace Jellyfin.Plugin.OpenWith
                 {
                     Name = Name,
                     EmbeddedResourcePath = GetType().Namespace + ".Configuration.configPage.html"
+                },
+                new PluginPageInfo
+                {
+                    Name = "openWithMenuJs",
+                    EmbeddedResourcePath = GetType().Namespace + ".Web.js.openWithMenu.js",
+                    EnableInMainMenu = false
                 }
             };
         }
