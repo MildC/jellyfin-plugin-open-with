@@ -18,18 +18,8 @@ namespace Jellyfin.Plugin.OpenWith.Configuration
         /// </summary>
         public PluginConfiguration()
         {
-            // Default configuration: IINA player
-            Players = new List<PlayerConfig>
-            {
-                new PlayerConfig
-                {
-                    Id = "iina",
-                    Prefix = "iina://",
-                    Name = "IINA",
-                    UrlTemplate = null,
-                    Enabled = true
-                }
-            };
+            // Initialize empty list - defaults will be added by Jellyfin if needed
+            Players = new List<PlayerConfig>();
         }
     }
 
