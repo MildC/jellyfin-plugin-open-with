@@ -41,22 +41,21 @@ Open video media with external players via deep links (IINA, VLC, MPV, etc.).
 
 ## Configuration
 
-### Default Player
+### Initial Setup
 
-The plugin ships with IINA pre-configured:
-- Prefix: `iina://`
-- URL Template: Default (`iina://weblink?url={streamUrl}`)
+The plugin starts with an empty player list. You'll need to add at least one player.
 
 ### Adding Players
 
 1. Go to Dashboard → Plugins → Open with player
-2. Click "Add Player"
-3. Fill in:
-   - **Display Name** (optional): Name shown in menu
+2. Click "Add Player" to insert a new row at the top of the table
+3. Fill in the fields inline:
+   - **Display Name** (optional): Name shown in menu (auto-generated from prefix if empty)
    - **Deep Link Prefix** (required): Protocol prefix ending with `://`
-   - **URL Template** (optional): Custom URL pattern
-   - **Enabled**: Check to activate
-4. Click Save
+   - **URL Template** (optional): Custom URL pattern (uses default if empty)
+4. Click "Save" on the row (changes are saved immediately)
+
+**Note:** Changes are auto-saved when you click the inline Save button. No need for a separate page-level save.
 
 ### URL Template Variables
 
@@ -83,12 +82,19 @@ Default template: `{prefix}weblink?url={streamUrl}`
 
 ## Usage
 
-1. Navigate to any video in Jellyfin
+1. Navigate to any video in Jellyfin (works on both card views and detail pages)
 2. Click the three dots menu (context menu)
-3. Click "Open with [Player]" (or "Open with..." for multiple players)
+3. Click "Open with [Player Name]" for the player you want to use
 4. The video will open in your player application
 
 **Note:** The player application must be installed on your system and registered for its deep link protocol.
+
+### How It Works
+
+- The plugin injects JavaScript directly into Jellyfin's `index.html` at server startup
+- A MutationObserver watches for video context menus
+- When a menu appears, the plugin adds "Open with..." buttons for each configured player
+- Clicking a button constructs a deep link URL and opens it in your default browser/system handler
 
 ## Requirements
 
@@ -125,10 +131,12 @@ Jellyfin.Plugin.OpenWith/
 
 ### Menu option doesn't appear
 
+- **Restart Jellyfin** after installing or updating the plugin (required to inject script into index.html)
 - Check browser console for `[OpenWith]` error messages
 - Verify plugin is enabled in Dashboard → Plugins
-- Ensure you're using a video item (not audio/image)
-- Try refreshing the browser
+- Ensure you've added at least one player in the configuration
+- Ensure you're clicking on a video item (not audio/image)
+- Try hard-refreshing the browser (Ctrl+Shift+R / Cmd+Shift+R)
 
 ### Deep link doesn't work
 
@@ -136,12 +144,7 @@ Jellyfin.Plugin.OpenWith/
 - Check that the deep link protocol is registered with your OS
 - Test the deep link manually in browser address bar
 - Check plugin logs for URL construction errors
-
-### Configuration doesn't save
-
-- Check Jellyfin logs for errors
-- Verify write permissions on plugin configuration directory
-- Try restarting Jellyfin after configuration changes
+- Ensure the deep link prefix ends with `://`
 
 ## License
 
