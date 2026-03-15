@@ -216,10 +216,9 @@
         }
         menu.dataset.openWithMenuAdded = 'true';
 
-        // Check if config loaded
+        // Load config if not already loaded
         if (!configLoaded) {
-            log('Config not loaded yet, skipping menu injection', 'warn');
-            return;
+            await loadPlayerConfig();
         }
 
         // Check if item is video
@@ -307,15 +306,20 @@
      * Setup click interception on menu buttons
      */
     function setupMenuButtonInterception() {
-        // Find all card menu buttons
-        document.querySelectorAll('.itemAction[data-action="menu"], .btnCardMenu, .cardOverlayButton-br, .cardOverlayButton').forEach(btn => {
+        // Find all menu buttons (card and detail page)
+        const selectors = [
+            '.card[data-mediatype="Video"] .itemAction[data-action="menu"]', // Card menu button
+            '.mainDetailButtons .btnMoreCommands' // Detail page menu button
+        ];
+
+        document.querySelectorAll(selectors.join(', ')).forEach(btn => {
             // Avoid duplicates
             if (btn.dataset.openWithIntercepted) return;
             btn.dataset.openWithIntercepted = 'true';
 
             // Intercept click to capture item ID
             btn.addEventListener('click', function() {
-                // Get item ID from parent card BEFORE menu opens
+                // Get item ID from parent card or detail page BEFORE menu opens
                 const card = btn.closest('[data-id]');
                 const itemId = card ? getItemId(card) : null;
 
@@ -374,20 +378,10 @@
     /**
      * Initialize plugin
      */
-    async function initialize() {
+    function initialize() {
         log('Initializing plugin');
 
-        // Check API client availability
-        const apiClient = getApiClient();
-        if (!apiClient) {
-            log('API client not available, plugin will not function', 'error');
-            return;
-        }
-
-        // Load configuration
-        await loadPlayerConfig();
-
-        // Set up MutationObserver to watch for DOM changes
+        // Set up MutationObserver immediately (don't wait for API client)
         let debounceTimer;
         const observer = new MutationObserver(() => {
             clearTimeout(debounceTimer);
@@ -404,7 +398,6 @@
 
         // Initial setup
         setupMenuButtonInterception();
-        processContextMenus();
 
         log('Plugin initialized and active');
     }

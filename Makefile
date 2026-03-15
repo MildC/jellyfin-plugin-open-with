@@ -1,4 +1,4 @@
-export VERSION := 1.0.7
+export VERSION := 1.0.9
 export GITHUB_REPO := MildC/jellyfin-plugin-open-with
 export FILE := jellyfin-plugin-open-with-$(VERSION).zip
 
