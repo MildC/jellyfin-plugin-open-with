@@ -211,10 +211,10 @@
      */
     async function addMenuItems(menu, itemId) {
         // Check if already processed
-        if (menu.dataset.openWithProcessed) {
+        if (menu.dataset.openWithMenuAdded) {
             return;
         }
-        menu.dataset.openWithProcessed = 'true';
+        menu.dataset.openWithMenuAdded = 'true';
 
         // Check if config loaded
         if (!configLoaded) {
@@ -237,8 +237,15 @@
         }
 
         // Find menu content container
-        const menuContent = menu.querySelector('.actionSheetContent, .verticalMenu');
-        const container = menuContent || menu;
+        const menuScroller = menu.querySelector('.actionSheetScroller, .verticalMenu');
+        if (!menuScroller) {
+            log('Menu scroller not found', 'warn');
+            return;
+        }
+
+        // Find insertion point (after copy-stream button if exists)
+        const copyStreamBtn = menuScroller.querySelector('[data-id="copy-stream"]');
+        const insertionPoint = copyStreamBtn ? copyStreamBtn.nextSibling : menuScroller.firstChild;
 
         // Single player mode - direct menu item
         if (enabledPlayers.length === 1) {
@@ -258,10 +265,16 @@
                     handlePlayerClick(player, itemId);
                 }
             );
-            container.appendChild(button);
+
+            if (copyStreamBtn) {
+                copyStreamBtn.parentNode.insertBefore(button, insertionPoint);
+            } else {
+                menuScroller.insertBefore(button, insertionPoint);
+            }
+
             log(`Added single player menu item for ${displayName}`);
         }
-        // Multiple player mode - submenu (simplified: show all players directly)
+        // Multiple player mode - show all players
         else {
             enabledPlayers.forEach(player => {
                 const displayName = player.Name || player.Prefix.replace('://', '');
@@ -279,10 +292,60 @@
                         handlePlayerClick(player, itemId);
                     }
                 );
-                container.appendChild(button);
+
+                if (copyStreamBtn) {
+                    copyStreamBtn.parentNode.insertBefore(button, insertionPoint);
+                } else {
+                    menuScroller.insertBefore(button, insertionPoint);
+                }
             });
             log(`Added ${enabledPlayers.length} player menu items`);
         }
+    }
+
+    /**
+     * Setup click interception on menu buttons
+     */
+    function setupMenuButtonInterception() {
+        // Find all card menu buttons
+        document.querySelectorAll('.itemAction[data-action="menu"], .btnCardMenu, .cardOverlayButton-br, .cardOverlayButton').forEach(btn => {
+            // Avoid duplicates
+            if (btn.dataset.openWithIntercepted) return;
+            btn.dataset.openWithIntercepted = 'true';
+
+            // Intercept click to capture item ID
+            btn.addEventListener('click', function() {
+                // Get item ID from parent card BEFORE menu opens
+                const card = btn.closest('[data-id]');
+                const itemId = card ? getItemId(card) : null;
+
+                if (itemId) {
+                    log(`Intercepted menu click for item: ${itemId}`);
+
+                    // Wait for menu to open, then store itemId on it
+                    setTimeout(() => {
+                        const menu = document.querySelector('.actionSheet.opened, .actionsheet.opened, .dialog.opened');
+                        if (menu && !menu.dataset.openWithProcessed) {
+                            menu.dataset.itemId = itemId;
+                            log(`Stored itemId on menu: ${itemId}`);
+                            processMenu(menu, itemId);
+                        }
+                    }, 150);
+                }
+            });
+        });
+    }
+
+    /**
+     * Process a single menu
+     */
+    async function processMenu(menu, itemId) {
+        if (menu.dataset.openWithProcessed) {
+            return;
+        }
+        menu.dataset.openWithProcessed = 'true';
+
+        await addMenuItems(menu, itemId);
     }
 
     /**
@@ -290,38 +353,20 @@
      */
     async function processContextMenus() {
         // Find all visible context menus
-        const menus = document.querySelectorAll('.menu.show, .actionsheet-content.show');
+        const menus = document.querySelectorAll('.actionSheet.opened, .actionsheet.opened, .dialog.opened');
 
         for (const menu of menus) {
             if (menu.dataset.openWithProcessed) {
                 continue;
             }
 
-            // Try to find item ID from context
-            let itemId = null;
-
-            // Look for menu button that triggered this menu
-            const menuButtons = document.querySelectorAll('[data-menu-id], .btnCardMenu, .cardMenu');
-            for (const btn of menuButtons) {
-                const card = btn.closest('[data-id]');
-                if (card) {
-                    itemId = getItemId(card);
-                    if (itemId) break;
-                }
-            }
-
-            // Fallback: check detail page
-            if (!itemId) {
-                const detailPage = document.querySelector('[data-id].detailPage-content, [data-id].itemDetailPage');
-                if (detailPage) {
-                    itemId = getItemId(detailPage);
-                }
-            }
+            // Check if itemId was stored during click interception
+            const itemId = menu.dataset.itemId;
 
             if (itemId) {
-                await addMenuItems(menu, itemId);
+                await processMenu(menu, itemId);
             } else {
-                log('Could not find item ID for menu', 'debug');
+                log('Menu found but no itemId stored', 'debug');
             }
         }
     }
@@ -342,11 +387,14 @@
         // Load configuration
         await loadPlayerConfig();
 
-        // Set up MutationObserver with debouncing
+        // Set up MutationObserver to watch for DOM changes
         let debounceTimer;
         const observer = new MutationObserver(() => {
             clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(processContextMenus, 100);
+            debounceTimer = setTimeout(() => {
+                setupMenuButtonInterception();
+                processContextMenus();
+            }, 100);
         });
 
         observer.observe(document.body, {
@@ -354,7 +402,8 @@
             subtree: true
         });
 
-        // Process any existing menus
+        // Initial setup
+        setupMenuButtonInterception();
         processContextMenus();
 
         log('Plugin initialized and active');
