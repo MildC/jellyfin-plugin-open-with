@@ -188,7 +188,6 @@
         const icon = document.createElement('span');
         icon.className = 'actionsheetMenuItemIcon listItemIcon listItemIcon-transparent material-icons ' + iconName;
         icon.setAttribute('aria-hidden', 'true');
-        icon.textContent = iconName;
 
         const bodyDiv = document.createElement('div');
         bodyDiv.className = 'listItemBody actionsheetListItemBody';
@@ -245,9 +244,8 @@
         const copyStreamBtn = menuScroller.querySelector('[data-id="copy-stream"]');
         const insertionPoint = copyStreamBtn ? copyStreamBtn.nextSibling : menuScroller.firstChild;
 
-        // Single player mode - direct menu item
-        if (enabledPlayers.length === 1) {
-            const player = enabledPlayers[0];
+        // Add menu item for each enabled player
+        enabledPlayers.forEach(player => {
             const displayName = player.Name || player.Prefix.replace('://', '');
             const button = createMenuButton(
                 `Open with ${displayName}`,
@@ -269,36 +267,9 @@
             } else {
                 menuScroller.insertBefore(button, insertionPoint);
             }
+        });
 
-            log(`Added single player menu item for ${displayName}`);
-        }
-        // Multiple player mode - show all players
-        else {
-            enabledPlayers.forEach(player => {
-                const displayName = player.Name || player.Prefix.replace('://', '');
-                const button = createMenuButton(
-                    `Open with ${displayName}`,
-                    'open_in_new',
-                    (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-
-                        // Close menu
-                        const closeBtn = menu.querySelector('[data-action="close"]');
-                        if (closeBtn) closeBtn.click();
-
-                        handlePlayerClick(player, itemId);
-                    }
-                );
-
-                if (copyStreamBtn) {
-                    copyStreamBtn.parentNode.insertBefore(button, insertionPoint);
-                } else {
-                    menuScroller.insertBefore(button, insertionPoint);
-                }
-            });
-            log(`Added ${enabledPlayers.length} player menu items`);
-        }
+        log(`Added ${enabledPlayers.length} player menu item(s)`);
     }
 
     /**

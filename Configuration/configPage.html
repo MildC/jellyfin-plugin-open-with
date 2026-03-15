@@ -3,9 +3,57 @@
 <head>
     <meta charset="utf-8">
     <title>Open with player - Configuration</title>
+    <style>
+        .tblPlayers {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1em;
+        }
+        .tblPlayers th,
+        .tblPlayers td {
+            padding: 0.75em;
+            text-align: left;
+            border-bottom: 1px solid var(--theme-border-color, #444);
+        }
+        .tblPlayers th {
+            font-weight: 600;
+            color: var(--theme-text-color-secondary, #999);
+        }
+        .tblPlayers input[type="text"],
+        .tblPlayers textarea {
+            width: 100%;
+            box-sizing: border-box;
+            background: var(--theme-background-color-secondary, #2a2a2a);
+            border: 1px solid var(--theme-border-color, #444);
+            color: var(--theme-text-color, #fff);
+            padding: 0.5em;
+            border-radius: 4px;
+        }
+        .tblPlayers textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+        .tblPlayers input[type="checkbox"] {
+            cursor: pointer;
+        }
+        .tblPlayers .actions {
+            white-space: nowrap;
+        }
+        .tblPlayers .actions button {
+            margin-right: 0.5em;
+        }
+        .tblPlayers tr.editing {
+            background: var(--theme-background-color-secondary, #2a2a2a);
+        }
+        .fieldHint {
+            font-size: 0.85em;
+            color: var(--theme-text-color-secondary, #999);
+            margin-top: 0.25em;
+        }
+    </style>
 </head>
 <body>
-    <div data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-checkbox,emby-select">
+    <div data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-checkbox">
         <div data-role="content">
             <div class="content-primary">
                 <h1>Open with player - Configuration</h1>
@@ -13,58 +61,22 @@
 
                 <div class="verticalSection">
                     <h2>Configured Players</h2>
-                    <div id="playerList"></div>
-                    <button is="emby-button" type="button" class="raised button-submit block" id="addPlayerBtn">
+                    <table class="tblPlayers">
+                        <thead>
+                            <tr>
+                                <th style="width: 20%;">Name</th>
+                                <th style="width: 15%;">Prefix</th>
+                                <th style="width: 35%;">URL Template</th>
+                                <th style="width: 10%;">Enabled</th>
+                                <th style="width: 20%;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="playerList">
+                        </tbody>
+                    </table>
+                    <button is="emby-button" type="button" class="raised button-submit" id="addPlayerBtn">
                         <span>Add Player</span>
                     </button>
-                </div>
-
-                <!-- Player Edit Modal -->
-                <div id="playerModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.75); overflow: auto;">
-                    <div style="background-color: var(--theme-background-color, #1c1c1c); margin: 5% auto; padding: 30px; border: 1px solid var(--theme-border-color, #444); width: 90%; max-width: 600px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-                        <h2 id="modalTitle">Add Player</h2>
-                        <form id="playerForm">
-                            <input type="hidden" id="playerId">
-                            <input type="hidden" id="playerIndex">
-
-                            <div class="inputContainer">
-                                <label for="playerName">Display Name (optional):</label>
-                                <input is="emby-input" type="text" id="playerName" placeholder="Leave empty to use prefix name" maxlength="50">
-                                <div class="fieldDescription">The name shown in the context menu.</div>
-                            </div>
-
-                            <div class="inputContainer">
-                                <label for="playerPrefix">Deep Link Prefix (required):</label>
-                                <input is="emby-input" type="text" id="playerPrefix" placeholder="iina://" required>
-                                <div class="fieldDescription">Must end with "://" (e.g., iina://, vlc://, mpv://)</div>
-                            </div>
-
-                            <div class="inputContainer">
-                                <label for="playerUrlTemplate">URL Template (optional):</label>
-                                <textarea is="emby-textarea" id="playerUrlTemplate" rows="3" placeholder="Leave empty for default pattern"></textarea>
-                                <div class="fieldDescription">
-                                    Variables: {prefix}, {streamUrl}, {itemId}, {itemName}<br>
-                                    Default: {prefix}weblink?url={streamUrl}
-                                </div>
-                            </div>
-
-                            <div class="checkboxContainer">
-                                <label>
-                                    <input is="emby-checkbox" type="checkbox" id="playerEnabled" checked>
-                                    <span>Enabled</span>
-                                </label>
-                            </div>
-
-                            <div class="formDialogFooter">
-                                <button is="emby-button" type="submit" class="raised button-submit block">
-                                    <span>Save</span>
-                                </button>
-                                <button is="emby-button" type="button" class="raised button-cancel" id="cancelBtn">
-                                    <span>Cancel</span>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
                 </div>
 
                 <div class="verticalSection">
@@ -103,109 +115,113 @@
 
                 // Render player list
                 function renderPlayerList() {
-                    const container = document.getElementById('playerList');
-                    if (!config.Players || config.Players.length === 0) {
-                        container.innerHTML = '<p><em>No players configured yet.</em></p>';
+                    const tbody = document.getElementById('playerList');
+                    tbody.innerHTML = '';
+
+                    if (config.Players.length === 0) {
+                        const row = tbody.insertRow();
+                        const cell = row.insertCell();
+                        cell.colSpan = 5;
+                        cell.innerHTML = '<em>No players configured yet. Click "Add Player" to get started.</em>';
+                        cell.style.textAlign = 'center';
+                        cell.style.padding = '2em';
                         return;
                     }
 
-                    let html = '<table class="tblPlayers" style="width: 100%; border-collapse: collapse;">';
-                    html += '<thead><tr><th>Name</th><th>Prefix</th><th>URL Template</th><th>Enabled</th><th>Actions</th></tr></thead><tbody>';
-
                     config.Players.forEach(function(player, index) {
-                        const displayName = player.Name || player.Prefix.replace('://', '');
-                        const templateDisplay = player.UrlTemplate ? escapeHtml(player.UrlTemplate) : '<em>Default</em>';
-                        const enabledDisplay = player.Enabled ? '✓' : '✗';
-                        html += '<tr>' +
-                            '<td>' + escapeHtml(displayName) + '</td>' +
-                            '<td>' + escapeHtml(player.Prefix) + '</td>' +
-                            '<td>' + templateDisplay + '</td>' +
-                            '<td>' + enabledDisplay + '</td>' +
-                            '<td>' +
-                                '<button is="emby-button" type="button" class="raised button-edit" data-index="' + index + '">Edit</button>' +
-                                '<button is="emby-button" type="button" class="raised button-delete" data-index="' + index + '">Delete</button>' +
-                            '</td>' +
-                        '</tr>';
-                    });
+                        const row = tbody.insertRow();
+                        row.dataset.index = index;
 
-                    html += '</tbody></table>';
-                    container.innerHTML = html;
+                        // Name
+                        const nameCell = row.insertCell();
+                        nameCell.textContent = player.Name || player.Prefix.replace('://', '');
 
-                    // Attach event listeners
-                    container.querySelectorAll('.button-edit').forEach(function(btn) {
-                        btn.addEventListener('click', function() {
-                            editPlayer(parseInt(this.getAttribute('data-index')));
-                        });
-                    });
+                        // Prefix
+                        const prefixCell = row.insertCell();
+                        prefixCell.textContent = player.Prefix;
 
-                    container.querySelectorAll('.button-delete').forEach(function(btn) {
-                        btn.addEventListener('click', function() {
-                            deletePlayer(parseInt(this.getAttribute('data-index')));
-                        });
+                        // URL Template
+                        const templateCell = row.insertCell();
+                        templateCell.innerHTML = player.UrlTemplate ? '<code>' + escapeHtml(player.UrlTemplate) + '</code>' : '<em>Default</em>';
+
+                        // Enabled
+                        const enabledCell = row.insertCell();
+                        enabledCell.textContent = player.Enabled !== false ? '✓' : '✗';
+                        enabledCell.style.textAlign = 'center';
+
+                        // Actions
+                        const actionsCell = row.insertCell();
+                        actionsCell.className = 'actions';
+                        actionsCell.innerHTML =
+                            '<button is="emby-button" type="button" class="raised button-edit" onclick="editPlayer(' + index + ')">Edit</button>' +
+                            '<button is="emby-button" type="button" class="raised button-delete" onclick="deletePlayer(' + index + ')">Delete</button>';
                     });
                 }
 
                 // Add player
-                document.getElementById('addPlayerBtn').addEventListener('click', function() {
-                    openPlayerModal();
-                });
+                window.addPlayer = function() {
+                    const tbody = document.getElementById('playerList');
+
+                    // Remove empty message if exists
+                    if (tbody.rows.length === 1 && tbody.rows[0].cells[0].colSpan === 5) {
+                        tbody.innerHTML = '';
+                    }
+
+                    const row = tbody.insertRow(0);
+                    row.className = 'editing';
+                    row.dataset.index = '-1'; // New player
+
+                    createEditRow(row, null);
+                };
 
                 // Edit player
-                function editPlayer(index) {
+                window.editPlayer = function(index) {
+                    const row = document.querySelector('tr[data-index="' + index + '"]');
                     const player = config.Players[index];
-                    openPlayerModal(player, index);
+
+                    row.className = 'editing';
+                    createEditRow(row, player);
+                };
+
+                // Create edit row
+                function createEditRow(row, player) {
+                    const index = row.dataset.index;
+                    row.innerHTML = '';
+
+                    // Name
+                    const nameCell = row.insertCell();
+                    nameCell.innerHTML = '<input type="text" id="name-' + index + '" placeholder="Optional" value="' + escapeHtml(player?.Name || '') + '">' +
+                        '<div class="fieldHint">Display name</div>';
+
+                    // Prefix
+                    const prefixCell = row.insertCell();
+                    prefixCell.innerHTML = '<input type="text" id="prefix-' + index + '" placeholder="iina://" required value="' + escapeHtml(player?.Prefix || '') + '">' +
+                        '<div class="fieldHint">Must end with ://</div>';
+
+                    // URL Template
+                    const templateCell = row.insertCell();
+                    templateCell.innerHTML = '<textarea id="template-' + index + '" placeholder="{prefix}weblink?url={streamUrl}">' + escapeHtml(player?.UrlTemplate || '') + '</textarea>' +
+                        '<div class="fieldHint">{prefix}, {streamUrl}, {itemId}, {itemName}</div>';
+
+                    // Enabled
+                    const enabledCell = row.insertCell();
+                    enabledCell.innerHTML = '<input type="checkbox" id="enabled-' + index + '" ' + (player?.Enabled !== false ? 'checked' : '') + '>';
+                    enabledCell.style.textAlign = 'center';
+
+                    // Actions
+                    const actionsCell = row.insertCell();
+                    actionsCell.className = 'actions';
+                    actionsCell.innerHTML =
+                        '<button is="emby-button" type="button" class="raised button-submit" onclick="savePlayer(' + index + ')">Save</button>' +
+                        '<button is="emby-button" type="button" class="raised button-cancel" onclick="cancelEdit(' + index + ')">Cancel</button>';
                 }
-
-                // Delete player
-                function deletePlayer(index) {
-                    if (!confirm('Remove this player?')) {
-                        return;
-                    }
-                    config.Players.splice(index, 1);
-                    renderPlayerList();
-                }
-
-                // Open modal
-                function openPlayerModal(player, index) {
-                    const modal = document.getElementById('playerModal');
-                    const form = document.getElementById('playerForm');
-                    const title = document.getElementById('modalTitle');
-
-                    title.textContent = player ? 'Edit Player' : 'Add Player';
-
-                    if (player) {
-                        document.getElementById('playerId').value = player.Id || '';
-                        document.getElementById('playerIndex').value = index;
-                        document.getElementById('playerName').value = player.Name || '';
-                        document.getElementById('playerPrefix').value = player.Prefix || '';
-                        document.getElementById('playerUrlTemplate').value = player.UrlTemplate || '';
-                        document.getElementById('playerEnabled').checked = player.Enabled !== false;
-                    } else {
-                        form.reset();
-                        document.getElementById('playerId').value = '';
-                        document.getElementById('playerIndex').value = '';
-                        document.getElementById('playerEnabled').checked = true;
-                    }
-
-                    modal.style.display = 'block';
-                }
-
-                // Close modal
-                function closePlayerModal() {
-                    document.getElementById('playerModal').style.display = 'none';
-                }
-
-                document.getElementById('cancelBtn').addEventListener('click', closePlayerModal);
 
                 // Save player
-                document.getElementById('playerForm').addEventListener('submit', function(e) {
-                    e.preventDefault();
-
-                    const prefix = document.getElementById('playerPrefix').value.trim();
-                    const name = document.getElementById('playerName').value.trim();
-                    const urlTemplate = document.getElementById('playerUrlTemplate').value.trim();
-                    const enabled = document.getElementById('playerEnabled').checked;
-                    const index = document.getElementById('playerIndex').value;
+                window.savePlayer = function(index) {
+                    const prefix = document.getElementById('prefix-' + index).value.trim();
+                    const name = document.getElementById('name-' + index).value.trim();
+                    const urlTemplate = document.getElementById('template-' + index).value.trim();
+                    const enabled = document.getElementById('enabled-' + index).checked;
 
                     // Validation
                     if (!prefix) {
@@ -222,29 +238,43 @@
                     }
 
                     const player = {
-                        Id: document.getElementById('playerId').value || generateId(),
+                        Id: config.Players[index]?.Id || 'player-' + Date.now(),
                         Prefix: prefix,
                         Name: name || null,
                         UrlTemplate: urlTemplate || null,
                         Enabled: enabled
                     };
 
-                    if (index !== '') {
-                        // Edit existing
-                        config.Players[parseInt(index)] = player;
+                    if (index === '-1') {
+                        // New player
+                        config.Players.unshift(player);
                     } else {
-                        // Add new
-                        config.Players.push(player);
+                        // Edit existing
+                        config.Players[index] = player;
                     }
 
                     renderPlayerList();
-                    closePlayerModal();
-                });
+                };
 
-                // Generate simple ID
-                function generateId() {
-                    return 'player-' + Date.now();
-                }
+                // Cancel edit
+                window.cancelEdit = function(index) {
+                    if (index === '-1') {
+                        // Remove new row
+                        renderPlayerList();
+                    } else {
+                        // Restore view
+                        renderPlayerList();
+                    }
+                };
+
+                // Delete player
+                window.deletePlayer = function(index) {
+                    if (!confirm('Remove this player?')) {
+                        return;
+                    }
+                    config.Players.splice(index, 1);
+                    renderPlayerList();
+                };
 
                 // Save configuration
                 document.getElementById('saveBtn').addEventListener('click', function() {
@@ -257,6 +287,9 @@
                         Dashboard.alert('Error saving configuration: ' + error);
                     });
                 });
+
+                // Add player button
+                document.getElementById('addPlayerBtn').addEventListener('click', addPlayer);
 
                 // Initialize
                 loadConfig();
