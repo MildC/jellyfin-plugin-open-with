@@ -157,7 +157,7 @@
 
                     const row = tbody.insertRow(0);
                     row.className = 'editing';
-                    row.dataset.index = '-1'; // New player
+                    row.dataset.index = -1; // New player (numeric)
 
                     createEditRow(row, null);
                 };
@@ -173,7 +173,7 @@
 
                 // Create edit row
                 function createEditRow(row, player) {
-                    const index = row.dataset.index;
+                    const index = parseInt(row.dataset.index);
                     row.innerHTML = '';
 
                     // Name
@@ -226,7 +226,7 @@
                         UrlTemplate: urlTemplate || null
                     };
 
-                    if (index === '-1') {
+                    if (index === -1) {
                         // New player
                         config.Players.unshift(player);
                     } else {
@@ -247,13 +247,8 @@
 
                 // Cancel edit
                 window.cancelEdit = function(index) {
-                    if (index === '-1') {
-                        // Remove new row
-                        renderPlayerList();
-                    } else {
-                        // Restore view
-                        renderPlayerList();
-                    }
+                    // Restore view (works for both new and edit)
+                    renderPlayerList();
                 };
 
                 // Delete player
