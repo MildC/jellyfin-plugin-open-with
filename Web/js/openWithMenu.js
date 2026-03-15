@@ -181,21 +181,20 @@
      */
     function createMenuButton(text, iconName, onClick) {
         const button = document.createElement('button');
-        button.className = 'listItem listItem-button open-with-menu-item';
+        button.className = 'listItem listItem-button actionSheetMenuItem emby-button';
         button.setAttribute('is', 'emby-button');
         button.setAttribute('type', 'button');
-        button.style.cssText = 'display: flex; align-items: center; padding: 0.5em 1em;';
 
         const icon = document.createElement('span');
-        icon.className = 'listItemIcon material-icons';
-        icon.style.marginRight = '1em';
+        icon.className = 'actionsheetMenuItemIcon listItemIcon listItemIcon-transparent material-icons ' + iconName;
+        icon.setAttribute('aria-hidden', 'true');
         icon.textContent = iconName;
 
         const bodyDiv = document.createElement('div');
-        bodyDiv.className = 'listItemBody';
+        bodyDiv.className = 'listItemBody actionsheetListItemBody';
 
         const textDiv = document.createElement('div');
-        textDiv.className = 'listItemBodyText';
+        textDiv.className = 'listItemBodyText actionSheetItemText';
         textDiv.textContent = text; // Safe: uses textContent instead of innerHTML
 
         bodyDiv.appendChild(textDiv);
@@ -303,53 +302,75 @@
     }
 
     /**
-     * Setup click interception on menu buttons
+     * Setup click interception on card menu buttons
      */
-    function setupMenuButtonInterception() {
-        // Find all menu buttons (card and detail page)
-        const selectors = [
-            '.card[data-mediatype="Video"] .itemAction[data-action="menu"]', // Card menu button
-            '.mainDetailButtons .btnMoreCommands' // Detail page menu button
-        ];
-
-        document.querySelectorAll(selectors.join(', ')).forEach(btn => {
+    function setupCardMenuInterception() {
+        document.querySelectorAll('.card[data-mediatype="Video"] .itemAction[data-action="menu"]').forEach(btn => {
             // Avoid duplicates
             if (btn.dataset.openWithIntercepted) return;
             btn.dataset.openWithIntercepted = 'true';
 
             // Intercept click to capture item ID
             btn.addEventListener('click', function() {
-                // Get item ID from parent card or detail page BEFORE menu opens
+                // Get item ID from parent card
                 const card = btn.closest('[data-id]');
                 const itemId = card ? getItemId(card) : null;
 
                 if (itemId) {
-                    log(`Intercepted menu click for item: ${itemId}`);
-
-                    // Wait for menu to open, then store itemId on it
-                    setTimeout(() => {
-                        const menu = document.querySelector('.actionSheet.opened, .actionsheet.opened, .dialog.opened');
-                        if (menu && !menu.dataset.openWithProcessed) {
-                            menu.dataset.itemId = itemId;
-                            log(`Stored itemId on menu: ${itemId}`);
-                            processMenu(menu, itemId);
-                        }
-                    }, 150);
+                    log(`Intercepted card menu click for item: ${itemId}`);
+                    scheduleMenuInjection(itemId);
                 }
             });
         });
     }
 
     /**
-     * Process a single menu
+     * Setup click interception on detail page menu button
      */
-    async function processMenu(menu, itemId) {
-        if (menu.dataset.openWithProcessed) {
-            return;
-        }
-        menu.dataset.openWithProcessed = 'true';
+    function setupDetailPageMenuInterception() {
+        document.querySelectorAll('.mainDetailButtons .btnMoreCommands').forEach(btn => {
+            // Avoid duplicates
+            if (btn.dataset.openWithIntercepted) return;
+            btn.dataset.openWithIntercepted = 'true';
 
-        await addMenuItems(menu, itemId);
+            // Intercept click to capture item ID
+            btn.addEventListener('click', function() {
+                // Get item ID from sibling buttons on detail page
+                let itemId = null;
+                const siblings = btn.parentElement?.querySelectorAll('[data-id]');
+                if (siblings && siblings.length > 0) {
+                    itemId = getItemId(siblings[0]);
+                }
+
+                if (itemId) {
+                    log(`Intercepted detail page menu click for item: ${itemId}`);
+                    scheduleMenuInjection(itemId);
+                }
+            });
+        });
+    }
+
+    /**
+     * Schedule menu item injection after menu opens
+     */
+    function scheduleMenuInjection(itemId) {
+        // Wait for menu to open, then store itemId on it
+        setTimeout(() => {
+            const menu = document.querySelector('.actionSheet.opened, .actionsheet.opened, .dialog.opened');
+            if (menu) {
+                menu.dataset.itemId = itemId;
+                log(`Stored itemId on menu: ${itemId}`);
+                addMenuItems(menu, itemId);
+            }
+        }, 150);
+    }
+
+    /**
+     * Setup click interception on menu buttons
+     */
+    function setupMenuButtonInterception() {
+        setupCardMenuInterception();
+        setupDetailPageMenuInterception();
     }
 
     /**
@@ -360,15 +381,11 @@
         const menus = document.querySelectorAll('.actionSheet.opened, .actionsheet.opened, .dialog.opened');
 
         for (const menu of menus) {
-            if (menu.dataset.openWithProcessed) {
-                continue;
-            }
-
             // Check if itemId was stored during click interception
             const itemId = menu.dataset.itemId;
 
             if (itemId) {
-                await processMenu(menu, itemId);
+                await addMenuItems(menu, itemId);
             } else {
                 log('Menu found but no itemId stored', 'debug');
             }
