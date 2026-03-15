@@ -39,18 +39,10 @@
                 Id: 'iina',
                 Prefix: 'iina://',
                 Name: 'IINA',
-                UrlTemplate: null,
-                Enabled: true
+                UrlTemplate: null
             }];
             configLoaded = true;
         }
-    }
-
-    /**
-     * Get enabled players from config
-     */
-    function getEnabledPlayers() {
-        return playerConfig.filter(p => p.Enabled);
     }
 
     /**
@@ -226,10 +218,9 @@
             return;
         }
 
-        // Get enabled players
-        const enabledPlayers = getEnabledPlayers();
-        if (enabledPlayers.length === 0) {
-            log('No enabled players, skipping menu injection');
+        // Check if we have any players
+        if (playerConfig.length === 0) {
+            log('No players configured, skipping menu injection');
             return;
         }
 
@@ -244,8 +235,8 @@
         const copyStreamBtn = menuScroller.querySelector('[data-id="copy-stream"]');
         const insertionPoint = copyStreamBtn ? copyStreamBtn.nextSibling : menuScroller.firstChild;
 
-        // Add menu item for each enabled player
-        enabledPlayers.forEach(player => {
+        // Add menu item for each player
+        playerConfig.forEach(player => {
             const displayName = player.Name || player.Prefix.replace('://', '');
             const button = createMenuButton(
                 `Open with ${displayName}`,
@@ -269,7 +260,7 @@
             }
         });
 
-        log(`Added ${enabledPlayers.length} player menu item(s)`);
+        log(`Added ${playerConfig.length} player menu item(s)`);
     }
 
     /**

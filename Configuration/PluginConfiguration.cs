@@ -47,10 +47,5 @@ namespace Jellyfin.Plugin.OpenWith.Configuration
         /// Gets or sets the custom URL template. If null/empty, uses default pattern.
         /// </summary>
         public string? UrlTemplate { get; set; }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether this player is enabled.
-        /// </summary>
-        public bool Enabled { get; set; } = true;
     }
 }
