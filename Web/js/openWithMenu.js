@@ -112,6 +112,9 @@
 
     /**
      * Build deep link URL for player
+     *
+     * Note: The {streamUrl} template variable now points to the Download endpoint
+     * for backward compatibility with existing user configurations.
      */
     function buildDeepLinkUrl(player, streamUrl, itemId, itemName) {
         const template = player.UrlTemplate || '{prefix}weblink?url={streamUrl}';
