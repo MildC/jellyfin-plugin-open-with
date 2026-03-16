@@ -145,10 +145,10 @@
     async function handlePlayerClick(player, itemId) {
         const apiClient = getApiClient();
 
-        // Get stream URL
-        const streamUrl = getDownloadUrl(itemId);
-        if (!streamUrl) {
-            alert('Cannot generate stream URL. Please ensure you are logged in.');
+        // Get download URL
+        const downloadUrl = getDownloadUrl(itemId);
+        if (!downloadUrl) {
+            alert('Cannot generate download URL. Please ensure you are logged in.');
             return;
         }
 
@@ -162,7 +162,7 @@
         }
 
         // Build and trigger deep link
-        const deepLinkUrl = buildDeepLinkUrl(player, streamUrl, itemId, itemName);
+        const deepLinkUrl = buildDeepLinkUrl(player, downloadUrl, itemId, itemName);
         triggerDeepLink(deepLinkUrl);
     }
 
