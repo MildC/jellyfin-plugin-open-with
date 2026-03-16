@@ -81,9 +81,9 @@
     }
 
     /**
-     * Get direct stream URL for item
+     * Get download URL for item
      */
-    function getDirectStreamUrl(itemId) {
+    function getDownloadUrl(itemId) {
         const apiClient = getApiClient();
         if (!apiClient) {
             log('API client not available', 'error');
@@ -104,9 +104,7 @@
             return null;
         }
 
-        const url = new URL(`/Videos/${itemId}/stream`, serverUrl);
-        url.searchParams.set('Static', 'true');
-        url.searchParams.set('mediaSourceId', itemId);
+        const url = new URL(`/Items/${itemId}/Download`, serverUrl);
         url.searchParams.set('api_key', accessToken);
 
         return url.toString();
@@ -148,7 +146,7 @@
         const apiClient = getApiClient();
 
         // Get stream URL
-        const streamUrl = getDirectStreamUrl(itemId);
+        const streamUrl = getDownloadUrl(itemId);
         if (!streamUrl) {
             alert('Cannot generate stream URL. Please ensure you are logged in.');
             return;
