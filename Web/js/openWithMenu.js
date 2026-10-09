@@ -105,7 +105,7 @@
         }
 
         const url = new URL(`/Items/${itemId}/Download`, serverUrl);
-        url.searchParams.set('api_key', accessToken);
+        url.searchParams.set('ApiKey', accessToken);
 
         return url.toString();
     }
